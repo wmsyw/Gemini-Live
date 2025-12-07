@@ -1,0 +1,50 @@
+import React from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Box, AppBar, Toolbar, Typography, Container, BottomNavigation, BottomNavigationAction, Paper } from '@mui/material';
+import { Mic, History, Settings } from 'lucide-react';
+
+export const Layout: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [value, setValue] = React.useState(0);
+  
+  React.useEffect(() => {
+    if (location.pathname === '/') setValue(0);
+    else if (location.pathname === '/history') setValue(1);
+    else if (location.pathname === '/settings') setValue(2);
+  }, [location.pathname]);
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'background.default' }}>
+      <AppBar position="static" color="transparent" elevation={0}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'text.primary' }}>
+            Gemini Live
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      
+      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 8 }}>
+        <Outlet />
+      </Container>
+      
+      <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
+        <BottomNavigation
+          showLabels
+          value={value}
+          onChange={(event, newValue) => {
+            setValue(newValue);
+            if (newValue === 0) navigate('/');
+            else if (newValue === 1) navigate('/history');
+            else if (newValue === 2) navigate('/settings');
+          }}
+        >
+          <BottomNavigationAction label="对话" icon={<Mic size={24} />} />
+          <BottomNavigationAction label="历史" icon={<History size={24} />} />
+          <BottomNavigationAction label="设置" icon={<Settings size={24} />} />
+        </BottomNavigation>
+      </Paper>
+    </Box>
+  );
+};
