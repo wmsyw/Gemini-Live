@@ -13,6 +13,6 @@ ENV PORT=27777
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev --no-audit || npm install --omit=dev --no-audit
 COPY server ./server
-COPY dist ./dist
+COPY --from=builder /app/dist ./dist
 EXPOSE 27777
 CMD ["node", "server/proxy.js"]
