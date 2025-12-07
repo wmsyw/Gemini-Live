@@ -22,11 +22,21 @@ function App() {
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => {
-      setSystemMode(e.matches ? 'dark' : 'light');
+    const handler = () => {
+      setSystemMode(mq.matches ? 'dark' : 'light');
     };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', handler as EventListener);
+    } else if (typeof (mq as any).addListener === 'function') {
+      (mq as any).addListener(handler);
+    }
+    return () => {
+      if (typeof mq.removeEventListener === 'function') {
+        mq.removeEventListener('change', handler as EventListener);
+      } else if (typeof (mq as any).removeListener === 'function') {
+        (mq as any).removeListener(handler);
+      }
+    };
   }, []);
 
   const theme = React.useMemo(() => {
