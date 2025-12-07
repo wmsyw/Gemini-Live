@@ -159,6 +159,7 @@ docker run -d \
 
 - 触发条件：推送到 `main` 分支或创建 `v*` 标签
 - 发布目标：GitHub Container Registry（`ghcr.io`）
+  - 架构：多平台镜像（`linux/amd64`、`linux/arm64`）
 
 使用步骤：
 
