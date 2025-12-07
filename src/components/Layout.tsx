@@ -16,8 +16,8 @@ export const Layout: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)' }}>
-      <AppBar position="static" color="transparent" elevation={0}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)', pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)' }}>
+      <AppBar position="static" color="transparent" elevation={0} sx={{ borderRadius: 0, pt: 'env(safe-area-inset-top)', bgcolor: 'background.default' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'text.primary' }}>
             Gemini Live
@@ -29,7 +29,7 @@ export const Layout: React.FC = () => {
         <Outlet />
       </Container>
       
-      <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'env(safe-area-inset-bottom)' }} elevation={3}>
+      <Paper square sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'env(safe-area-inset-bottom)', borderRadius: 0, bgcolor: 'background.default' }} elevation={0}>
         <BottomNavigation
           showLabels
           value={value}
@@ -39,6 +39,7 @@ export const Layout: React.FC = () => {
             else if (newValue === 1) navigate('/history');
             else if (newValue === 2) navigate('/settings');
           }}
+          sx={{ bgcolor: 'background.default' }}
         >
           <BottomNavigationAction label="对话" icon={<Mic size={24} />} />
           <BottomNavigationAction label="历史" icon={<History size={24} />} />
