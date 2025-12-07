@@ -4,9 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/icons/Gemini_Live_Logo.svg" />
     <link rel="shortcut icon" type="image/svg+xml" href="/icons/Gemini_Live_Logo.svg" />
-    <link rel="apple-touch-icon" href="/icons/Gemini_Live_Logo.svg" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" href="/icons/Gemini_Live_Logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="color-scheme" content="light dark" />
     <title>Gemini Live Voice</title>
     <meta name="description" content="Real-time voice conversation with Gemini AI" />
     <meta name="theme-color" content="#1976d2" />
@@ -20,6 +22,16 @@
           }
         })
       }
+      const meta = document.querySelector('meta[name="theme-color"]');
+      const applyThemeColor = () => {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        meta?.setAttribute('content', isDark ? '#121212' : '#f5f5f5');
+      };
+      applyThemeColor();
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = () => applyThemeColor();
+      if (typeof mq.addEventListener === 'function') mq.addEventListener('change', handler);
+      else if (typeof mq.addListener === 'function') mq.addListener(handler);
     </script>
   </head>
   <body>

@@ -16,7 +16,7 @@ export const Layout: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)' }}>
       <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'text.primary' }}>
@@ -25,11 +25,11 @@ export const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 8 }}>
+      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 'calc(80px + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </Container>
       
-      <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
+      <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'env(safe-area-inset-bottom)' }} elevation={3}>
         <BottomNavigation
           showLabels
           value={value}
