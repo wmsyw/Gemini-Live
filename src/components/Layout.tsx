@@ -16,7 +16,7 @@ export const Layout: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)', pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)' }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderRadius: 0, pt: 'env(safe-area-inset-top)', bgcolor: 'background.default' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'text.primary' }}>
@@ -25,7 +25,20 @@ export const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 'calc(44px + env(safe-area-inset-bottom))' }}>
+      <Container
+        maxWidth="sm"
+        sx={{
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          pb: 'calc(44px + env(safe-area-inset-bottom))',
+          '@media (display-mode: standalone)': {
+            pb: 'calc(36px + env(safe-area-inset-bottom))',
+          },
+        }}
+      >
         <Outlet />
       </Container>
       
@@ -39,7 +52,13 @@ export const Layout: React.FC = () => {
             else if (newValue === 1) navigate('/history');
             else if (newValue === 2) navigate('/settings');
           }}
-          sx={{ bgcolor: 'background.default', height: 44 }}
+          sx={{
+            bgcolor: 'background.default',
+            height: 44,
+            '@media (display-mode: standalone)': {
+              height: 36,
+            },
+          }}
         >
           <BottomNavigationAction label="对话" icon={<Mic size={18} />} />
           <BottomNavigationAction label="历史" icon={<History size={18} />} />

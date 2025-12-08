@@ -45,6 +45,8 @@ export default defineConfig({
         orientation: "portrait",
         start_url: "/",
         icons: [
+          { src: "/icons/Gemini_Live.png", type: "image/png", purpose: "any" },
+          { src: "/icons/Gemini_Live.png", type: "image/png", purpose: "maskable" },
           { src: "/icons/Gemini_Live_Logo.svg", type: "image/svg+xml", purpose: "any maskable" }
         ]
       }
