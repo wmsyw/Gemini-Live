@@ -8,6 +8,8 @@ export const Layout: React.FC = () => {
   const location = useLocation();
   
   const [value, setValue] = React.useState(0);
+  const touchStartX = React.useRef<number | null>(null);
+  const touchEndX = React.useRef<number | null>(null);
   
   React.useEffect(() => {
     if (location.pathname === '/') setValue(0);
@@ -16,7 +18,25 @@ export const Layout: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)', pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)', pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)' }}
+      onTouchStart={(e) => { touchStartX.current = e.changedTouches[0].clientX; }}
+      onTouchEnd={(e) => {
+        touchEndX.current = e.changedTouches[0].clientX;
+        if (touchStartX.current != null && touchEndX.current != null) {
+          const dx = touchEndX.current - touchStartX.current;
+          if (Math.abs(dx) > 60) {
+            if (dx > 0 && value > 0) setValue(value - 1);
+            if (dx < 0 && value < 2) setValue(value + 1);
+            const next = dx > 0 ? value - 1 : value + 1;
+            if (next === 0) navigate('/');
+            else if (next === 1) navigate('/history');
+            else if (next === 2) navigate('/settings');
+          }
+        }
+        touchStartX.current = null;
+        touchEndX.current = null;
+      }}
+    >
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderRadius: 0, pt: 'env(safe-area-inset-top)', bgcolor: 'background.default' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'text.primary' }}>
