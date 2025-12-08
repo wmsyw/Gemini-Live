@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Box, Typography, List, ListItem, ListItemText, Paper, IconButton, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, LinearProgress } from '@mui/material';
 import { useStore } from '@/store';
 import { useTranslation } from 'react-i18next';
-import { PlayCircle, Trash2, Edit } from 'lucide-react';
+import { PlayCircle, PauseCircle, Trash2, Edit } from 'lucide-react';
 import { audioService } from '@/services/audio';
 
 const History: React.FC = () => {
@@ -20,6 +20,7 @@ const History: React.FC = () => {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [playProgress, setPlayProgress] = useState<number>(0);
   const playTimerRef = useRef<number | null>(null);
+  const [paused, setPaused] = useState<boolean>(false);
 
   useEffect(() => {
     if (renameOpen) {
@@ -87,6 +88,31 @@ const History: React.FC = () => {
   };
 
   const handlePlay = async (item: typeof conversationHistory[number]) => {
+    // 同一条目：播放中点击则暂停；暂停中点击则继续
+    if (playingId === item.id) {
+      if (!paused) {
+        await audioService.suspendContext();
+        setPaused(true);
+        return;
+      } else {
+        await audioService.resumeContext();
+        setPaused(false);
+        return;
+      }
+    }
+
+    // 切换到新条目前，停止旧播放并清理状态
+    if (playingId) {
+      audioService.stopPlayback();
+      if (playTimerRef.current) {
+        clearTimeout(playTimerRef.current);
+        playTimerRef.current = null;
+      }
+      setPlayingId(null);
+      setPlayProgress(0);
+      setPaused(false);
+    }
+
     try {
       await audioService.initialize();
       await audioService.resumeContext();
@@ -100,18 +126,20 @@ const History: React.FC = () => {
         return;
       }
       setPlayingId(item.id);
+      setPaused(false);
       setPlayProgress(0);
       const totalSec = audios.reduce((sum, buf) => sum + (new Int16Array(buf).length / 24000), 0);
-      const startMs = performance.now();
+      const startCtx = audioService.getCurrentTime();
       audios.forEach(buf => audioService.playAudio(buf));
       const tick = () => {
-        const elapsed = (performance.now() - startMs) / 1000;
+        const elapsed = audioService.getCurrentTime() - startCtx;
         const ratio = Math.min(elapsed / totalSec, 1);
         setPlayProgress(Math.round(ratio * 100));
         if (ratio < 1) {
           playTimerRef.current = window.setTimeout(tick, 100);
         } else {
           setPlayingId(null);
+          setPaused(false);
           playTimerRef.current = null;
         }
       };
@@ -119,6 +147,7 @@ const History: React.FC = () => {
     } catch (e) {
       console.error('Playback error', e);
       setPlayingId(null);
+      setPaused(false);
       setPlayProgress(0);
       if (playTimerRef.current) {
         clearTimeout(playTimerRef.current);
@@ -168,7 +197,7 @@ const History: React.FC = () => {
               secondaryAction={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <IconButton edge="end" aria-label="play" onClick={() => handlePlay(item)}>
-                    <PlayCircle />
+                    {playingId === item.id && !paused ? <PauseCircle /> : <PlayCircle />}
                   </IconButton>
                   <IconButton edge="end" aria-label="rename" onClick={() => openRename(item)}>
                     <Edit />

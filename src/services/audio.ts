@@ -8,6 +8,7 @@ export class AudioService {
   private onAudioData: ((data: ArrayBuffer) => void) | null = null;
   
   private nextStartTime: number = 0;
+  private activeSources: AudioBufferSourceNode[] = [];
   
   async initialize(): Promise<void> {
     if (this.context) return;
@@ -98,6 +99,10 @@ export class AudioService {
     // 输出音频同时接到分析器，以显示播放频谱
     source.connect(this.analyser!);
     source.connect(this.context.destination);
+    this.activeSources.push(source);
+    source.onended = () => {
+      this.activeSources = this.activeSources.filter(s => s !== source);
+    };
     
     const currentTime = this.context.currentTime;
     if (this.nextStartTime < currentTime) {
@@ -128,6 +133,30 @@ export class AudioService {
     if (this.context?.state === 'suspended') {
       await this.context.resume();
     }
+  }
+
+  stopPlayback(): void {
+    if (!this.context) return;
+    for (const s of this.activeSources) {
+      try { s.stop(); } catch (e) { void e; }
+      try { s.disconnect(); } catch (e) { void e; }
+    }
+    this.activeSources = [];
+    this.nextStartTime = this.context.currentTime;
+  }
+
+  async suspendContext(): Promise<void> {
+    if (this.context?.state === 'running') {
+      await this.context.suspend();
+    }
+  }
+
+  isSuspended(): boolean {
+    return this.context?.state === 'suspended';
+  }
+
+  getCurrentTime(): number {
+    return this.context?.currentTime || 0;
   }
 }
 
