@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "node server/proxy.js & vite",
+    "dev": "NODE_ENV=development node server/proxy.js & vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

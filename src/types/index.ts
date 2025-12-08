@@ -2,6 +2,7 @@ export interface GeminiLiveConfig {
   model: string;
   apiKey: string;
   baseUrl?: string;
+  forceProxy?: boolean;
   voice?: {
     language: string;
     speed: number;
@@ -39,6 +40,7 @@ export interface ConversationHistory {
 export interface AppSettings {
   apiKey: string;
   baseUrl: string;
+  forceProxy: boolean;
   theme: 'light' | 'dark' | 'auto';
   language: 'zh-CN' | 'en-US';
   voiceStyle?: 'Aoede' | 'Puck' | 'Charon' | 'Fenrir' | 'Kore';

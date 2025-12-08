@@ -9,10 +9,12 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=27777
+ENV PORT_INTERNAL=27777
+ENV PORT_PUBLIC=5173
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev --no-audit || npm install --omit=dev --no-audit
 COPY server ./server
 COPY --from=builder /app/dist ./dist
 EXPOSE 27777
+EXPOSE 5173
 CMD ["node", "server/proxy.js"]

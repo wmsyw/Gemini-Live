@@ -103,7 +103,77 @@ ensureSecret();
 initKeyBytes();
 loadStoredKey();
 
-const server = http.createServer((req, res) => {
+function serveStatic(req, res) {
+  const origin = req.headers?.origin;
+  if (origin) {
+    try {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    } catch (_) {}
+  }
+
+  if (req.method === 'OPTIONS') {
+    try {
+      res.writeHead(204);
+      res.end();
+      return true;
+    } catch (_) {}
+  }
+  if (req.method === 'GET') {
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      try {
+        const loc = `http://localhost:5173${req.url || '/'}`;
+        res.writeHead(302, { Location: loc });
+        res.end();
+        return true;
+      } catch (_) {}
+    }
+    try {
+      const url = new URL(req.url || '/', 'http://localhost');
+      const pathname = url.pathname;
+      const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
+      const abs = path.join(DIST_DIR, rel);
+      const resolvedDist = path.resolve(DIST_DIR);
+      const resolvedAbs = path.resolve(abs);
+      if (!resolvedAbs.startsWith(resolvedDist)) {
+        res.writeHead(403);
+        res.end();
+        return true;
+      }
+      let fileToSend = fs.existsSync(resolvedAbs) && fs.statSync(resolvedAbs).isFile() ? resolvedAbs : path.join(DIST_DIR, 'index.html');
+      const ext = path.extname(fileToSend).toLowerCase();
+      const type = MIME[ext] || 'application/octet-stream';
+      const stream = fs.createReadStream(fileToSend);
+      stream.on('open', () => {
+        res.writeHead(200, { 'Content-Type': type });
+      });
+      stream.on('error', () => {
+        res.writeHead(404);
+        res.end();
+      });
+      stream.pipe(res);
+      return true;
+    } catch (_) {}
+  }
+  return false;
+}
+
+const internalServer = http.createServer((req, res) => {
+  const origin = req.headers?.origin;
+  if (origin) {
+    try {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    } catch (_) {}
+  }
+  if (req.method === 'OPTIONS') {
+    try { res.writeHead(204); res.end(); return; } catch (_) {}
+  }
   if (req.method === 'POST' && req.url === '/api/key') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
@@ -119,7 +189,7 @@ const server = http.createServer((req, res) => {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ ok: false, error: 'invalid apiKey' }));
         }
-      } catch (e) {
+      } catch (_) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: false }));
       }
@@ -131,40 +201,12 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ ok: true, hasKey: !!API_KEY }));
     return;
   }
-  if (req.method === 'GET') {
-    try {
-      const url = new URL(req.url || '/', 'http://localhost');
-      const pathname = url.pathname;
-      const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
-      const abs = path.join(DIST_DIR, rel);
-      const resolvedDist = path.resolve(DIST_DIR);
-      const resolvedAbs = path.resolve(abs);
-      if (!resolvedAbs.startsWith(resolvedDist)) {
-        res.writeHead(403);
-        res.end();
-        return;
-      }
-      let fileToSend = fs.existsSync(resolvedAbs) && fs.statSync(resolvedAbs).isFile() ? resolvedAbs : path.join(DIST_DIR, 'index.html');
-      const ext = path.extname(fileToSend).toLowerCase();
-      const type = MIME[ext] || 'application/octet-stream';
-      const stream = fs.createReadStream(fileToSend);
-      stream.on('open', () => {
-        res.writeHead(200, { 'Content-Type': type });
-      });
-      stream.on('error', () => {
-        res.writeHead(404);
-        res.end();
-      });
-      stream.pipe(res);
-      return;
-    } catch (_) {}
-  }
   res.writeHead(404);
   res.end();
 });
-const wss = new WebSocketServer({ server, path: '/live' });
+const wssInternal = new WebSocketServer({ server: internalServer, path: '/live' });
 
-wss.on('connection', (client) => {
+wssInternal.on('connection', (client) => {
   const upstreamUrl = `wss://${HOST}${PATH}?key=${API_KEY}`;
   if (!API_KEY) {
     try { client.close(1011, 'API key not set'); } catch (_) {}
@@ -214,7 +256,89 @@ wss.on('connection', (client) => {
   });
 });
 
-const PORT = process.env.PORT || 27777;
-server.listen(PORT, () => {
-  console.log(`WS proxy listening on ws://localhost:${PORT}/live`);
+const PUBLIC_PORT = process.env.PORT_PUBLIC ? Number(process.env.PORT_PUBLIC) : 5173;
+const INTERNAL_PORT = process.env.PORT_INTERNAL ? Number(process.env.PORT_INTERNAL) : (process.env.PORT ? Number(process.env.PORT) : 27777);
+
+internalServer.listen(INTERNAL_PORT, () => {
+  console.log(`Internal proxy on ws://127.0.0.1:${INTERNAL_PORT}/live`);
+});
+
+const publicServer = http.createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/api/key') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const forward = http.request({
+          hostname: '127.0.0.1',
+          port: INTERNAL_PORT,
+          path: '/api/key',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        }, (resp) => {
+          const chunks = [];
+          resp.on('data', c => chunks.push(c));
+          resp.on('end', () => {
+            const buf = Buffer.concat(chunks);
+            res.writeHead(resp.statusCode || 200, { 'Content-Type': 'application/json' });
+            res.end(buf);
+          });
+        });
+        forward.on('error', () => { res.writeHead(502); res.end(); });
+        forward.write(body);
+        forward.end();
+      } catch (_) { res.writeHead(500); res.end(); }
+    });
+    return;
+  }
+  if (req.method === 'GET' && req.url === '/healthz') {
+    try {
+      const forward = http.request({ hostname: '127.0.0.1', port: INTERNAL_PORT, path: '/healthz', method: 'GET' }, (resp) => {
+        const chunks = [];
+        resp.on('data', c => chunks.push(c));
+        resp.on('end', () => {
+          const buf = Buffer.concat(chunks);
+          res.writeHead(resp.statusCode || 200, { 'Content-Type': 'application/json' });
+          res.end(buf);
+        });
+      });
+      forward.on('error', () => { res.writeHead(502); res.end(); });
+      forward.end();
+    } catch (_) { res.writeHead(500); res.end(); }
+    return;
+  }
+  if (serveStatic(req, res)) return;
+  res.writeHead(404);
+  res.end();
+});
+
+const wssPublic = new WebSocketServer({ server: publicServer, path: '/live' });
+
+wssPublic.on('connection', (client) => {
+  const upstream = new WebSocket(`ws://127.0.0.1:${INTERNAL_PORT}/live`);
+  const buffer = [];
+  let upstreamOpen = false;
+  client.on('message', (msg) => {
+    if (upstreamOpen && upstream.readyState === WebSocket.OPEN) {
+      upstream.send(msg);
+    } else {
+      buffer.push(msg);
+    }
+  });
+  upstream.on('open', () => {
+    upstreamOpen = true;
+    while (buffer.length > 0) {
+      const msg = buffer.shift();
+      try { if (upstream.readyState === WebSocket.OPEN) upstream.send(msg); } catch (_) {}
+    }
+  });
+  upstream.on('message', (data) => { if (client.readyState === WebSocket.OPEN) client.send(data); });
+  upstream.on('close', (code, reason) => { if (client.readyState === WebSocket.OPEN) client.close(code, reason); });
+  upstream.on('error', () => { try { client.close(1011, 'Upstream error'); } catch (_) {} });
+  client.on('close', () => { try { upstream.close(); } catch (_) {} });
+  client.on('error', () => { try { upstream.close(); } catch (_) {} });
+});
+
+publicServer.listen(PUBLIC_PORT, () => {
+  console.log(`Public server on http://0.0.0.0:${PUBLIC_PORT} and ws://0.0.0.0:${PUBLIC_PORT}/live`);
 });

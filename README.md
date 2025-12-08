@@ -97,7 +97,7 @@ npm run build
 
 ```bash
 export GEMINI_API_KEY="你的密钥"
-PORT=27777 node server/proxy.js
+PORT_INTERNAL=27777 PORT_PUBLIC=5173 node server/proxy.js
 ```
 
 3. 使用反向代理（示例 Nginx）为 WS 代理提供 `wss`：
@@ -111,7 +111,7 @@ server {
     ssl_certificate_key /path/to/privkey.pem;
 
     location /live {
-        proxy_pass http://127.0.0.1:27777/live;
+        proxy_pass http://127.0.0.1:5173/live;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -119,8 +119,7 @@ server {
     }
 
     location / {
-        root /path/to/dist;
-        try_files $uri /index.html;
+        proxy_pass http://127.0.0.1:5173/;
     }
 }
 ```
@@ -128,7 +127,8 @@ server {
 4. 前端连接说明：
 
 - 本地开发自动使用 `ws://localhost:27777/live`
-- 生产部署建议通过同域 `wss://your.domain/live` 代理转发。若需显式指定前端连接地址，可在代码中为 `GeminiLiveClient` 传入 `baseUrl`（以 `wss://` 开头的完整地址）覆盖自动选择逻辑。
+- 生产环境前端通过 `http://<host>:5173/` 访问，前端的 `/live` WebSocket 将在容器内转发到内部代理 `127.0.0.1:27777`，无需对外暴露 27777。
+- 如需显式指定前端连接地址，可在代码中为 `GeminiLiveClient` 传入同域 `/live`。
 
 ## Docker 部署
 
@@ -143,14 +143,16 @@ docker build -t gemini-live-voice-pwa:latest .
 ```bash
 docker run -d \
   --name gemini-live \
-  -p 27777:27777 \
-  -e GEMINI_API_KEY="你的密钥" \ 
+  -p 5173:5173 \
+  -e GEMINI_API_KEY="你的密钥" \
   -e PROXY_SECRET="可选，用于安全持久化 API Key" \
+  -e PORT_PUBLIC=5173 \
+  -e PORT_INTERNAL=27777 \
   ghcr.io/wmsyw/gemini-live-voice-pwa:latest
 ```
 
-- 访问前端：`http://localhost:27777/`
-- 前端将通过 `ws://localhost:27777/live` 与代理交互（容器内部端口为 `27777`）
+- 访问前端：`http://localhost:5173/`
+- 前端将通过同域 `ws://localhost:5173/live` 与后端交互，容器内会转发到 `127.0.0.1:27777/live`
 - 若不设置 `GEMINI_API_KEY`，可在应用“设置”页保存 API Key，后端将接收并立即生效；设置 `PROXY_SECRET` 时会加密持久化到容器内 `server/.secrets/gemini.key.enc`
 
 ### 使用 GitHub Actions 自动构建并发布镜像
@@ -178,25 +180,27 @@ docker run -d \
 docker pull ghcr.io/wmsyw/gemini-live-voice-pwa:latest
 docker run -d \
   --name gemini-live \
-  -p 27777:27777 \
+  -p 5173:5173 \
   -e GEMINI_API_KEY="你的密钥" \
   -e PROXY_SECRET="可选的持久化密钥" \
+  -e PORT_PUBLIC=5173 \
+  -e PORT_INTERNAL=27777 \
   ghcr.io/wmsyw/gemini-live-voice-pwa:latest
 ```
 
 生产环境建议：
 
-- 在反向代理（Nginx/Caddy）中为外部提供 `https://` 与 `wss://`，反代到容器 `http://127.0.0.1:27777` 的路径 `/live`
+- 在反向代理（Nginx/Caddy）中为外部提供 `https://` 与 `wss://`，反代到容器 `http://127.0.0.1:5173` 的路径 `/live`
 
 ### 使用 Docker Compose（推荐）
 
-已提供 `docker-compose.yml`，默认使用 GHCR 镜像并启用数据持久化：
+已提供 `docker-compose.yml`，默认使用 GHCR 镜像，公开 5173，内部 27777，并启用数据持久化：
 
 ```bash
 docker compose up -d
 ```
 
-持久化目录：Compose 将主机当前目录下的 `./secrets` 绑定到容器 `/app/server/.secrets`，用于保存自动生成的 `proxy.secret` 与加密后的 `gemini.key.enc`，确保容器重建后仍可恢复。
+持久化目录：Compose 将主机当前目录下的 `./secrets` 绑定到容器 `/app/server/.secrets`，用于保存自动生成的 `proxy.secret` 与加密后的 `gemini.key.enc`，确保容器重建后仍可恢复。仅映射 `5173:5173`，`27777` 不对公网暴露。
 
 如需在启动时注入 API Key：编辑 `docker-compose.yml` 设置 `GEMINI_API_KEY`；也可以留空，在应用“设置”页保存后端将自动持久化。
 - 将 `PROXY_SECRET` 作为机密注入到部署环境，启用后端的加密持久化

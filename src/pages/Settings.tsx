@@ -28,7 +28,8 @@ const Settings: React.FC = () => {
       console.error('Failed to set API key on server', e);
     }
     const wsUrl = isDev ? `ws://localhost:${proxyPort}/live` : (window.location.protocol === 'https:' ? `wss://${window.location.host}/live` : `ws://${window.location.host}/live`);
-    updateSettings({ apiKey, baseUrl: wsUrl });
+    const directUrl = 'https://generativelanguage.googleapis.com';
+    updateSettings({ apiKey, baseUrl: settings.forceProxy ? wsUrl : directUrl });
   };
   
   const handleThemeChange = (event: SelectChangeEvent) => {
@@ -63,6 +64,17 @@ const Settings: React.FC = () => {
           <Button variant="contained" onClick={handleSaveApiKey} sx={{ minWidth: 100 }}>
             {t('common.save')}
           </Button>
+        </Box>
+        <Box sx={{ mt: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={settings.forceProxy}
+                onChange={(e) => updateSettings({ forceProxy: e.target.checked })}
+              />
+            }
+            label={t('settings.forceProxy')}
+          />
         </Box>
       </Paper>
       

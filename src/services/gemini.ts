@@ -21,13 +21,11 @@ export class GeminiLiveClient {
       this.onClose = onClose || null;
       
       let url: string;
-      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       const isExplicitWS = this.config.baseUrl && (this.config.baseUrl.startsWith('ws://') || this.config.baseUrl.startsWith('wss://'));
-      const wantsProxy = !!isExplicitWS || isLocal;
-      if (wantsProxy) {
-        url = isExplicitWS
-          ? this.config.baseUrl
-          : 'ws://localhost:8080/live';
+      if (isExplicitWS) {
+        url = this.config.baseUrl as string;
+      } else if (this.config.forceProxy) {
+        url = 'ws://localhost:27777/live';
       } else {
         const host = (this.config.baseUrl || 'https://generativelanguage.googleapis.com').replace(/^https?:\/\//, '');
         url = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${this.config.apiKey}`;
@@ -92,7 +90,10 @@ export class GeminiLiveClient {
               }
             }
           }
-        }
+        },
+        tools: [
+          { google_search: {} }
+        ]
       }
     };
     this.send(setupMessage);

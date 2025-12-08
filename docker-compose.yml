@@ -4,9 +4,9 @@ services:
   app:
     image: ghcr.io/wmsyw/gemini-live-voice-pwa:latest
     container_name: gemini-live
-    # 映射外部端口到容器内部代理端口 27777
+    # 仅公开前端端口（默认 5173）；代理 27777 不暴露
     ports:
-      - "27777:27777"
+      - "5173:5173"
     # 自动重启，提升可用性
     restart: unless-stopped
     environment:
@@ -14,5 +14,7 @@ services:
       - GEMINI_API_KEY=
       # 不需要手动填写 PROXY_SECRET：后端会在首次启动时自动生成并持久化
       # - PROXY_SECRET=
+      - PORT_PUBLIC=5173
+      - PORT_INTERNAL=27777
     volumes:
       - ./secrets:/app/server/.secrets

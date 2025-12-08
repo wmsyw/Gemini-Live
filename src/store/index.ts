@@ -26,6 +26,7 @@ interface StoreState extends Omit<AppState, 'audioContext' | 'mediaStream' | 'au
 const DEFAULT_SETTINGS: AppSettings = {
   apiKey: '',
   baseUrl: 'https://generativelanguage.googleapis.com',
+  forceProxy: false,
   theme: 'auto',
   language: 'zh-CN',
   voiceStyle: 'Aoede',
@@ -86,13 +87,14 @@ export const useStore = create<StoreState>((set, get) => ({
   loadSettings: async () => {
     const settings = await storageService.getSettings();
     if (settings) {
+      const merged = { ...DEFAULT_SETTINGS, ...settings };
       set({ 
-        settings,
-        currentTheme: settings.theme,
-        currentLanguage: settings.language
+        settings: merged,
+        currentTheme: merged.theme,
+        currentLanguage: merged.language
       });
       // Initialize client if API key exists
-      if (settings.apiKey) {
+      if (merged.apiKey) {
           get().initializeGeminiClient();
       }
     }
@@ -158,6 +160,7 @@ export const useStore = create<StoreState>((set, get) => ({
           model: 'models/gemini-2.5-flash-native-audio-preview-09-2025',
           apiKey: settings.apiKey,
           baseUrl: settings.baseUrl,
+          forceProxy: settings.forceProxy,
           voice: {
               language: settings.language,
               speed: 1.0,
