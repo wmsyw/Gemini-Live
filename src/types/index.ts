@@ -9,6 +9,8 @@ export interface GeminiLiveConfig {
     pitch: number;
     voiceName?: 'Aoede' | 'Puck' | 'Charon' | 'Fenrir' | 'Kore';
   };
+  systemInstruction?: string;
+  useGlobalVoiceConstraints?: boolean;
 }
 
 export interface AudioFormat {
@@ -50,6 +52,8 @@ export interface AppSettings {
     noiseSuppression: boolean;
     echoCancellation: boolean;
   };
+  systemInstruction?: string;
+  useGlobalVoiceConstraints?: boolean;
 }
 
 export interface ConversationSession {

@@ -1,6 +1,12 @@
 import { GeminiLiveConfig } from '@/types';
 import { audioService } from './audio';
 
+const GLOBAL_VOICE_CONSTRAINTS = [
+  'Global Constraints:',
+  '1) Wait for the user to finish their complete thought. If there is a short pause, do not interrupt immediately.',
+  '2) Strictly avoid reading out lists, tables, or code syntax. Summarize information conversationally.'
+].join('\n');
+
 type MessageHandler = (data: unknown) => void;
 
 export class GeminiLiveClient {
@@ -78,6 +84,10 @@ export class GeminiLiveClient {
   }
   
   private sendSetup() {
+    const parts: Array<{ text: string }> = [];
+    if (this.config.systemInstruction) parts.push({ text: this.config.systemInstruction });
+    if (this.config.useGlobalVoiceConstraints) parts.push({ text: GLOBAL_VOICE_CONSTRAINTS });
+
     const setupMessage = {
       setup: {
         model: this.config.model,
@@ -93,7 +103,8 @@ export class GeminiLiveClient {
         },
         tools: [
           { google_search: {} }
-        ]
+        ],
+        ...(parts.length ? { system_instruction: { parts } } : {})
       }
     };
     this.send(setupMessage);

@@ -21,6 +21,9 @@ const History: React.FC = () => {
   const [playProgress, setPlayProgress] = useState<number>(0);
   const playTimerRef = useRef<number | null>(null);
   const [paused, setPaused] = useState<boolean>(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteMode, setDeleteMode] = useState<'one' | 'selected' | 'all'>('one');
+  const [deleteTargetId, setDeleteTargetId] = useState<string>('');
 
   useEffect(() => {
     if (renameOpen) {
@@ -35,12 +38,12 @@ const History: React.FC = () => {
   useEffect(() => {
     const node = contentRef.current;
     if (!node) return;
-    if (renameOpen) {
+    if (renameOpen || deleteOpen) {
       node.setAttribute('inert', '');
     } else {
       node.removeAttribute('inert');
     }
-  }, [renameOpen]);
+  }, [renameOpen, deleteOpen]);
 
   useEffect(() => {
     return () => {
@@ -73,18 +76,16 @@ const History: React.FC = () => {
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = () => {
     if (selected.length === 0) return;
-    if (!confirm(t('historyPage.confirmDeleteSelected'))) return;
-    await deleteHistories(selected);
-    setSelected([]);
+    setDeleteMode('selected');
+    setDeleteOpen(true);
   };
 
-  const handleDeleteAll = async () => {
+  const handleDeleteAll = () => {
     if (conversationHistory.length === 0) return;
-    if (!confirm(t('historyPage.confirmDeleteAll'))) return;
-    await clearAllHistory();
-    setSelected([]);
+    setDeleteMode('all');
+    setDeleteOpen(true);
   };
 
   const handlePlay = async (item: typeof conversationHistory[number]) => {
@@ -202,9 +203,10 @@ const History: React.FC = () => {
                   <IconButton edge="end" aria-label="rename" onClick={() => openRename(item)}>
                     <Edit />
                   </IconButton>
-                  <IconButton edge="end" aria-label="delete" onClick={async () => {
-                    if (!confirm(t('historyPage.confirmDeleteOne'))) return;
-                    await deleteHistory(item.id);
+                  <IconButton edge="end" aria-label="delete" onClick={() => {
+                    setDeleteMode('one');
+                    setDeleteTargetId(item.id);
+                    setDeleteOpen(true);
                   }}>
                     <Trash2 />
                   </IconButton>
@@ -251,6 +253,62 @@ const History: React.FC = () => {
             </Typography>
         )}
       </List>
+      <Dialog 
+        open={deleteOpen} 
+        onClose={() => { setDeleteOpen(false); setDeleteTargetId(''); }} 
+        fullWidth 
+        PaperProps={{ sx: { borderRadius: 3 } }}
+        container={() => document.getElementById('root') as HTMLElement}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          {deleteMode === 'one' ? t('historyPage.confirmDeleteOne') : deleteMode === 'selected' ? t('historyPage.confirmDeleteSelected') : t('historyPage.confirmDeleteAll')}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1.5, pb: 0, px: 3 }}>
+          {deleteMode === 'one' && (
+            <Typography variant="body2" color="text.secondary">
+              {(() => {
+                const item = conversationHistory.find(h => h.id === deleteTargetId);
+                const title = item ? (item.summary || `Conversation ${formatDate(item.timestamp)}`) : '';
+                const count = item ? item.messages.length : 0;
+                return `${title} — ${count} messages`;
+              })()}
+            </Typography>
+          )}
+          {deleteMode === 'selected' && (
+            <Typography variant="body2" color="text.secondary">
+              {`${selected.length} selected items will be deleted.`}
+            </Typography>
+          )}
+          {deleteMode === 'all' && (
+            <Typography variant="body2" color="text.secondary">
+              {`${conversationHistory.length} items will be deleted.`}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => { setDeleteOpen(false); setDeleteTargetId(''); }}>{t('common.cancel')}</Button>
+          <Button 
+            variant="contained" 
+            color="error"
+            onClick={async () => {
+              if (deleteMode === 'one' && deleteTargetId) {
+                await deleteHistory(deleteTargetId);
+              } else if (deleteMode === 'selected') {
+                if (selected.length === 0) { setDeleteOpen(false); return; }
+                await deleteHistories(selected);
+                setSelected([]);
+              } else {
+                await clearAllHistory();
+                setSelected([]);
+              }
+              setDeleteOpen(false);
+              setDeleteTargetId('');
+            }}
+          >
+            {t('common.delete')}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog 
         open={renameOpen} 
         onClose={() => setRenameOpen(false)} 

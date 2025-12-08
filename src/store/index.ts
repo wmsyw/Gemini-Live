@@ -36,7 +36,9 @@ const DEFAULT_SETTINGS: AppSettings = {
     outputGain: 1.0,
     noiseSuppression: true,
     echoCancellation: true
-  }
+  },
+  systemInstruction: '',
+  useGlobalVoiceConstraints: false
 };
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -81,6 +83,14 @@ export const useStore = create<StoreState>((set, get) => ({
     }
     // Re-initialize client if voice style changes
     if (newSettings.voiceStyle && newSettings.voiceStyle !== currentSettings.voiceStyle) {
+        get().initializeGeminiClient();
+    }
+    // Re-initialize client if system instruction changes
+    if (typeof newSettings.systemInstruction === 'string' && newSettings.systemInstruction !== currentSettings.systemInstruction) {
+        get().initializeGeminiClient();
+    }
+    // Re-initialize client if global constraints toggle changes
+    if (typeof newSettings.useGlobalVoiceConstraints === 'boolean' && newSettings.useGlobalVoiceConstraints !== currentSettings.useGlobalVoiceConstraints) {
         get().initializeGeminiClient();
     }
   },
@@ -172,7 +182,9 @@ export const useStore = create<StoreState>((set, get) => ({
               speed: 1.0,
               pitch: 1.0,
               voiceName: settings.voiceStyle
-          }
+          },
+          systemInstruction: settings.systemInstruction,
+          useGlobalVoiceConstraints: settings.useGlobalVoiceConstraints
       });
       
       set({ geminiClient: client });
