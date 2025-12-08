@@ -12,3 +12,13 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overscroll-behavior-y: none;
+  background-color: Canvas;
+}

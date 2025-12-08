@@ -191,7 +191,8 @@ const Home: React.FC = () => {
                     bgcolor: isConnected ? 'error.dark' : 'primary.dark',
                 },
                 boxShadow: 4,
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                touchAction: 'manipulation'
             }}
         >
             {isConnected ? <StopCircle size={36} /> : <Mic size={36} />}

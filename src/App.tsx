@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Snackbar, Button } from '@mui/material';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { getTheme } from './theme';
@@ -44,6 +45,30 @@ function App() {
     return getTheme(mode);
   }, [currentTheme, systemMode]);
 
+  const [installEvent, setInstallEvent] = React.useState<BeforeInstallPromptEvent | null>(null);
+  const [installOpen, setInstallOpen] = React.useState(false);
+
+  useEffect(() => {
+    const handler = (e: BeforeInstallPromptEvent) => {
+      e.preventDefault();
+      setInstallEvent(e);
+      setInstallOpen(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installEvent) return;
+    try {
+      await installEvent.prompt();
+    } catch (e) {
+      console.error('Install prompt failed', e);
+    }
+    setInstallOpen(false);
+    setInstallEvent(null);
+  };
+
   const router = React.useMemo(() => createBrowserRouter([
     {
       path: '/',
@@ -60,6 +85,18 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      <Snackbar
+        open={installOpen}
+        onClose={() => setInstallOpen(false)}
+        message={systemMode === 'dark' ? '添加到主屏幕以获得更好体验' : '添加到主屏幕以获得更好体验'}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        action={
+          <Button color="primary" size="small" onClick={handleInstall}>
+            安装
+          </Button>
+        }
+        sx={{ mb: 'calc(64px + env(safe-area-inset-bottom))' }}
+      />
     </ThemeProvider>
   );
 }
