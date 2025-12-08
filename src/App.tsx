@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { getTheme } from './theme';
 import { Layout } from './components/Layout';
@@ -22,19 +22,19 @@ function App() {
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => {
-      setSystemMode(mq.matches ? 'dark' : 'light');
+    const handler = (e: MediaQueryListEvent) => {
+      setSystemMode(e.matches ? 'dark' : 'light');
     };
     if (typeof mq.addEventListener === 'function') {
-      mq.addEventListener('change', handler as EventListener);
-    } else if (typeof (mq as any).addListener === 'function') {
-      (mq as any).addListener(handler);
+      mq.addEventListener('change', handler);
+    } else if (typeof mq.addListener === 'function') {
+      mq.addListener(handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
     }
     return () => {
       if (typeof mq.removeEventListener === 'function') {
-        mq.removeEventListener('change', handler as EventListener);
-      } else if (typeof (mq as any).removeListener === 'function') {
-        (mq as any).removeListener(handler);
+        mq.removeEventListener('change', handler);
+      } else if (typeof mq.removeListener === 'function') {
+        mq.removeListener(handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
       }
     };
   }, []);
@@ -44,18 +44,22 @@ function App() {
     return getTheme(mode);
   }, [currentTheme, systemMode]);
 
+  const router = React.useMemo(() => createBrowserRouter([
+    {
+      path: '/',
+      element: <Layout />,
+      children: [
+        { index: true, element: <Home /> },
+        { path: 'settings', element: <Settings /> },
+        { path: 'history', element: <History /> },
+      ]
+    }
+  ]), []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="history" element={<History />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
     </ThemeProvider>
   );
 }
