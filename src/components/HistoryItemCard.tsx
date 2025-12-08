@@ -105,13 +105,13 @@ export const HistoryItemCard: React.FC<HistoryItemCardProps> = ({
 
         <Box 
             sx={{ 
-                px: 1,
-                pb: 0.5,
+                px: 2, // 1 -> 2
+                pb: 1, // 0.5 -> 1
                 display: 'flex', 
                 justifyContent: 'flex-end',
-                gap: 0.5,
+                gap: 1, // 0.5 -> 1
                 borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                pt: 0.5
+                pt: 1 // 0.5 -> 1
             }}
         >
             <IconButton 
