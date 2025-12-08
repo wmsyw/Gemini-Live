@@ -1,6 +1,10 @@
 # Gemini Live Voice PWA
 
-基于 Google Gemini-2.5-Flash-Live API 的实时语音对话 Web 应用程序。
+<div align="center">
+  <img src="public/icons/Gemini_Live.png" alt="Gemini Live Logo" width="512" />
+</div>
+
+基于 Google Gemini-2.5-Flash-Native-Audio API 的实时语音对话 Web 应用程序。
 
 ## 功能特点
 
