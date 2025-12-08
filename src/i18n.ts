@@ -49,7 +49,11 @@ i18n
             empty: 'No history yet.',
             confirmDeleteSelected: 'Delete selected history items?',
             confirmDeleteAll: 'Delete all history items?',
-            confirmDeleteOne: 'Delete this history item?'
+            confirmDeleteOne: 'Delete this history item?',
+            renameTitle: 'Rename Conversation',
+            renameLabel: 'Title',
+            renamePlaceholder: 'Enter a short title',
+            renameHelper: 'Max 100 characters'
           }
         },
       },
@@ -90,7 +94,11 @@ i18n
             empty: '暂无历史记录',
             confirmDeleteSelected: '确认删除所选历史记录？',
             confirmDeleteAll: '确认删除全部历史记录？',
-            confirmDeleteOne: '确认删除该历史记录？'
+            confirmDeleteOne: '确认删除该历史记录？',
+            renameTitle: '重命名对话',
+            renameLabel: '标题',
+            renamePlaceholder: '请输入简短标题',
+            renameHelper: '最长 100 个字符'
           }
         },
       },

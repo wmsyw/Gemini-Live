@@ -73,6 +73,14 @@ export class StorageService {
     }
     await tx.done;
   }
+
+  async renameHistory(id: string, summary: string): Promise<void> {
+    const db = await this.dbPromise;
+    const item = await db.get('history', id);
+    if (!item) return;
+    const updated = { ...item, summary };
+    await db.put('history', updated);
+  }
 }
 
 export const storageService = new StorageService();

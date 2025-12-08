@@ -17,6 +17,7 @@ interface StoreState extends Omit<AppState, 'audioContext' | 'mediaStream' | 'au
   deleteHistory: (id: string) => Promise<void>;
   deleteHistories: (ids: string[]) => Promise<void>;
   clearAllHistory: () => Promise<void>;
+  renameHistory: (id: string, summary: string) => Promise<void>;
   
   // Clients
   geminiClient: GeminiLiveClient | null;
@@ -117,6 +118,11 @@ export const useStore = create<StoreState>((set, get) => ({
   
   clearAllHistory: async () => {
     await storageService.clearHistory();
+    await get().loadHistory();
+  },
+
+  renameHistory: async (id: string, summary: string) => {
+    await storageService.renameHistory(id, summary);
     await get().loadHistory();
   },
   
