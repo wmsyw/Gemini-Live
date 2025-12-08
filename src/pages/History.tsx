@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Box, Typography, List, ListItem, ListItemText, Paper, IconButton, Checkbox, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, LinearProgress } from '@mui/material';
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 import { useStore } from '@/store';
 import { useTranslation } from 'react-i18next';
-import { PlayCircle, PauseCircle, Trash2, Edit } from 'lucide-react';
 import { audioService } from '@/services/audio';
+import { HistoryItemCard } from '@/components/HistoryItemCard';
 
 const History: React.FC = () => {
   const { t } = useTranslation();
@@ -177,88 +177,78 @@ const History: React.FC = () => {
   };
 
   return (
-    <Box ref={contentRef}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>{t('common.history')}</Typography>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Button variant="outlined" onClick={toggleSelectAll} disabled={conversationHistory.length === 0}>
-          {t('historyPage.selectAll')}
-        </Button>
-        <Button variant="outlined" color="error" onClick={handleDeleteSelected} disabled={selected.length === 0}>
-          {t('historyPage.deleteSelected')}
-        </Button>
-        <Button variant="contained" color="error" onClick={handleDeleteAll} disabled={conversationHistory.length === 0}>
-          {t('historyPage.deleteAll')}
-        </Button>
+    <Box ref={contentRef} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
+      <Box sx={{ flexShrink: 0, zIndex: 10, bgcolor: 'background.default', pb: 2 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>{t('common.history')}</Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" onClick={toggleSelectAll} disabled={conversationHistory.length === 0}>
+            {t('historyPage.selectAll')}
+            </Button>
+            <Button variant="outlined" color="error" onClick={handleDeleteSelected} disabled={selected.length === 0}>
+            {t('historyPage.deleteSelected')}
+            </Button>
+            <Button variant="contained" color="error" onClick={handleDeleteAll} disabled={conversationHistory.length === 0}>
+            {t('historyPage.deleteAll')}
+            </Button>
+        </Box>
       </Box>
+
+      {/* 顶部模糊遮罩 */}
+      <Box 
+        sx={{ 
+          position: 'absolute', 
+          top: 100, // 调整位置
+          left: 0, 
+          right: 0, 
+          height: 40, // 增加高度
+          background: (theme) => `linear-gradient(to bottom, ${theme.palette.background.default} 0%, transparent 100%)`, // 使用主题背景色过渡
+          zIndex: 5,
+          pointerEvents: 'none'
+        }} 
+      />
       
-      <List>
-        {conversationHistory.map((item) => (
-          <Paper key={item.id} sx={{ mb: 2, borderRadius: 2 }} elevation={1}>
-            <ListItem
-              secondaryAction={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <IconButton edge="end" aria-label="play" onClick={() => handlePlay(item)}>
-                    {playingId === item.id && !paused ? <PauseCircle /> : <PlayCircle />}
-                  </IconButton>
-                  <IconButton edge="end" aria-label="rename" onClick={() => openRename(item)}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton edge="end" aria-label="delete" onClick={() => {
+      <Box sx={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        px: 0.5, 
+        pb: 2, 
+        pt: 3,
+        scrollbarWidth: 'none',  // Firefox
+        '&::-webkit-scrollbar': { display: 'none' } // Chrome, Safari
+      }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {conversationHistory.map((item) => (
+            <HistoryItemCard
+                key={item.id}
+                item={item}
+                isPlaying={playingId === item.id}
+                isPaused={paused}
+                playProgress={playProgress}
+                isSelected={selected.includes(item.id)}
+                onPlay={handlePlay}
+                onRename={() => openRename(item)}
+                onDelete={() => {
                     setDeleteMode('one');
                     setDeleteTargetId(item.id);
                     setDeleteOpen(true);
-                  }}>
-                    <Trash2 />
-                  </IconButton>
-                </Box>
-              }
-            >
-              <Checkbox
-                checked={selected.includes(item.id)}
-                onChange={() => toggleSelect(item.id)}
-                sx={{ mr: 1 }}
-              />
-              <ListItemText
-                primary={item.summary || `Conversation ${formatDate(item.timestamp)}`}
-                secondary={
-                    <React.Fragment>
-                        <Typography component="span" variant="body2" color="text.primary">
-                            {formatDate(item.timestamp)}
-                        </Typography>
-                        {" — " + formatDuration(item.duration) + ` (${item.messages.length} messages)`}
-                        {playingId === item.id && (
-                          <Box sx={{ mt: 1 }}>
-                            <LinearProgress variant="determinate" value={playProgress} />
-                          </Box>
-                        )}
-                    </React.Fragment>
-                }
-                sx={{ pr: 9 }}
-                primaryTypographyProps={{
-                  sx: {
-                    display: '-webkit-box',
-                    WebkitBoxOrient: 'vertical',
-                    WebkitLineClamp: 2,
-                    overflow: 'hidden'
-                  }
                 }}
-                secondaryTypographyProps={{ component: 'div' }}
-              />
-            </ListItem>
-          </Paper>
-        ))}
-        {conversationHistory.length === 0 && (
-            <Typography variant="body1" color="text.secondary" align="center" mt={4}>
-                {t('historyPage.empty')}
-            </Typography>
-        )}
-      </List>
+                onSelect={() => toggleSelect(item.id)}
+                formatDate={formatDate}
+                formatDuration={formatDuration}
+            />
+            ))}
+            {conversationHistory.length === 0 && (
+                <Typography variant="body1" color="text.secondary" align="center" mt={4}>
+                    {t('historyPage.empty')}
+                </Typography>
+            )}
+        </Box>
+      </Box>
       <Dialog 
         open={deleteOpen} 
         onClose={() => { setDeleteOpen(false); setDeleteTargetId(''); }} 
         fullWidth 
         PaperProps={{ sx: { borderRadius: 3 } }}
-        container={() => document.getElementById('root') as HTMLElement}
       >
         <DialogTitle sx={{ pb: 1 }}>
           {deleteMode === 'one' ? t('historyPage.confirmDeleteOne') : deleteMode === 'selected' ? t('historyPage.confirmDeleteSelected') : t('historyPage.confirmDeleteAll')}
@@ -276,12 +266,12 @@ const History: React.FC = () => {
           )}
           {deleteMode === 'selected' && (
             <Typography variant="body2" color="text.secondary">
-              {`${selected.length} selected items will be deleted.`}
+              {t('historyPage.deleteSelectedCount', { count: selected.length })}
             </Typography>
           )}
           {deleteMode === 'all' && (
             <Typography variant="body2" color="text.secondary">
-              {`${conversationHistory.length} items will be deleted.`}
+              {t('historyPage.deleteAllCount', { count: conversationHistory.length })}
             </Typography>
           )}
         </DialogContent>
@@ -293,6 +283,7 @@ const History: React.FC = () => {
             onClick={async () => {
               if (deleteMode === 'one' && deleteTargetId) {
                 await deleteHistory(deleteTargetId);
+                setSelected(prev => prev.filter(id => id !== deleteTargetId));
               } else if (deleteMode === 'selected') {
                 if (selected.length === 0) { setDeleteOpen(false); return; }
                 await deleteHistories(selected);
@@ -314,7 +305,6 @@ const History: React.FC = () => {
         onClose={() => setRenameOpen(false)} 
         fullWidth 
         PaperProps={{ sx: { borderRadius: 3 } }}
-        container={() => document.getElementById('root') as HTMLElement}
       >
         <DialogTitle sx={{ pb: 1 }}>{t('historyPage.renameTitle')}</DialogTitle>
         <DialogContent sx={{ pt: 1.5, pb: 0, px: 3 }}>

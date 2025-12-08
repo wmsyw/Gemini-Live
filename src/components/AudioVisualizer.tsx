@@ -29,15 +29,9 @@ export const AudioVisualizer: React.FC<Props> = ({ isActive }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // If not active, draw a flat line
+    // If not active, do nothing (don't draw flat line)
     if (!isActive) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height / 2);
-        ctx.lineTo(canvas.width, canvas.height / 2);
-        ctx.strokeStyle = theme.palette.text.disabled;
-        ctx.lineWidth = 2;
-        ctx.stroke();
         return () => window.removeEventListener('resize', resizeCanvas);
     }
 

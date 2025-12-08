@@ -249,10 +249,36 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>{t('common.settings')}</Typography>
-      
-      <Paper sx={{ p: 3, borderRadius: 2 }} elevation={2}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
+      <Box sx={{ flexShrink: 0, zIndex: 10, bgcolor: 'background.default', pb: 0.5 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>{t('common.settings')}</Typography>
+      </Box>
+
+      {/* 顶部模糊遮罩 */}
+      <Box 
+        sx={{ 
+          position: 'absolute', 
+          top: 45, // 调整位置
+          left: 0, 
+          right: 0, 
+          height: 32, // 调整高度
+          background: (theme) => `linear-gradient(to bottom, ${theme.palette.background.default} 0%, transparent 100%)`,
+          zIndex: 5,
+          pointerEvents: 'none'
+        }} 
+      />
+
+      <Box sx={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        px: 0.5, 
+        pb: 2, 
+        pt: 1.5,
+        scrollbarWidth: 'none',  // Firefox
+        '&::-webkit-scrollbar': { display: 'none' } // Chrome, Safari
+      }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Paper sx={{ p: 3, borderRadius: 2 }} elevation={2}>
         <Typography variant="h6" gutterBottom fontWeight="bold">API 配置</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           需要 Gemini API Key 才能使用实时语音功能。
@@ -417,6 +443,8 @@ const Settings: React.FC = () => {
           </Box>
         </Box>
       </Paper>
+        </Box>
+      </Box>
     </Box>
   );
 };

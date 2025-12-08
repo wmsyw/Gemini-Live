@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Box, Typography, IconButton, Paper } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
 import { Mic, StopCircle } from 'lucide-react';
 import { useStore } from '@/store';
 import { audioService } from '@/services/audio';
@@ -7,6 +7,7 @@ import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { ModelPart, ServerMessage } from '@/types/index';
+import { ChatMessage } from '@/components/ChatMessage';
 
 const Home: React.FC = () => {
   const { t } = useTranslation();
@@ -146,8 +147,34 @@ const Home: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ flex: 1, overflowY: 'auto', mb: 2, display: 'flex', flexDirection: 'column', gap: 2, px: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
+      
+      {/* 顶部模糊遮罩 */}
+      <Box 
+        sx={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          height: 32, 
+          background: (theme) => `linear-gradient(to bottom, ${theme.palette.background.default} 0%, transparent 100%)`,
+          zIndex: 5,
+          pointerEvents: 'none'
+        }} 
+      />
+
+      <Box sx={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        mb: 2, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 2, 
+        px: 1, 
+        pt: 2,
+        scrollbarWidth: 'none',
+        '&::-webkit-scrollbar': { display: 'none' }
+      }}>
         {currentConversation.messages.length === 0 && !isConnected && (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.6 }}>
                 <Mic size={48} />
@@ -156,54 +183,40 @@ const Home: React.FC = () => {
         )}
         
         {currentConversation.messages.map((msg, idx) => (
-            msg.data.text && (
-                <Paper 
-                    key={idx} 
-                    elevation={1}
-                    sx={{ 
-                        p: 2, 
-                        maxWidth: '85%', 
-                        alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                        bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper',
-                        color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
-                        borderRadius: 2,
-                        wordBreak: 'break-word'
-                    }}
-                >
-                    <Typography variant="body1">{msg.data.text}</Typography>
-                </Paper>
-            )
+            <ChatMessage key={idx} message={msg} />
         ))}
         <div ref={messagesEndRef} />
       </Box>
 
-      <AudioVisualizer isActive={isConnected} />
+      <Box sx={{ flexShrink: 0 }}>
+        <AudioVisualizer isActive={isConnected} />
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2, alignItems: 'center', flexDirection: 'column' }}>
-        <IconButton 
-            onClick={handleToggleRecording}
-            sx={{ 
-                width: 72, 
-                height: 72, 
-                bgcolor: isConnected ? 'error.main' : 'primary.main',
-                color: 'white',
-                '&:hover': {
-                    bgcolor: isConnected ? 'error.dark' : 'primary.dark',
-                },
-                boxShadow: 4,
-                transition: 'all 0.3s ease',
-                touchAction: 'manipulation'
-            }}
-        >
-            {isConnected ? <StopCircle size={36} /> : <Mic size={36} />}
-        </IconButton>
-        
-        <Box sx={{ height: 24, mt: 1 }}>
-          {isConnected && (
-              <Typography variant="caption" color="primary" sx={{ fontWeight: 'medium' }}>
-                  {isRecording ? t('home.listening') : 'Connecting...'}
-              </Typography>
-          )}
+        <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2, alignItems: 'center', flexDirection: 'column' }}>
+            <IconButton 
+                onClick={handleToggleRecording}
+                sx={{ 
+                    width: 72, 
+                    height: 72, 
+                    bgcolor: isConnected ? 'error.main' : 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                        bgcolor: isConnected ? 'error.dark' : 'primary.dark',
+                    },
+                    boxShadow: 4,
+                    transition: 'all 0.3s ease',
+                    touchAction: 'manipulation'
+                }}
+            >
+                {isConnected ? <StopCircle size={36} /> : <Mic size={36} />}
+            </IconButton>
+            
+            <Box sx={{ height: 24, mt: 1 }}>
+            {isConnected && (
+                <Typography variant="caption" color="primary" sx={{ fontWeight: 'medium' }}>
+                    {isRecording ? t('home.listening') : 'Connecting...'}
+                </Typography>
+            )}
+            </Box>
         </Box>
       </Box>
     </Box>

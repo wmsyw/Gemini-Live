@@ -67,6 +67,8 @@ i18n
             confirmDeleteSelected: 'Delete selected history items?',
             confirmDeleteAll: 'Delete all history items?',
             confirmDeleteOne: 'Delete this history item?',
+            deleteSelectedCount: '{{count}} items will be deleted.',
+            deleteAllCount: '{{count}} items will be deleted.',
             renameTitle: 'Rename Conversation',
             renameLabel: 'Title',
             renamePlaceholder: 'Enter a short title',
@@ -86,6 +88,7 @@ i18n
             save: '保存',
             cancel: '取消',
             delete: '删除',
+            confirm: '确认', // 新增确认
           },
           home: {
             welcome: '点击麦克风开始对话',
@@ -129,6 +132,8 @@ i18n
             confirmDeleteSelected: '确认删除所选历史记录？',
             confirmDeleteAll: '确认删除全部历史记录？',
             confirmDeleteOne: '确认删除该历史记录？',
+            deleteSelectedCount: '将删除 {{count}} 条记录。',
+            deleteAllCount: '将删除 {{count}} 条记录。',
             renameTitle: '重命名对话',
             renameLabel: '标题',
             renamePlaceholder: '请输入简短标题',

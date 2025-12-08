@@ -150,22 +150,23 @@ export const useStore = create<StoreState>((set, get) => ({
   endSession: async () => {
     const { currentConversation } = get();
     if (currentConversation.messages.length > 0) {
+      // 格式化当前日期时间作为默认标题
+      const date = new Date(currentConversation.startTime);
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hour = date.getHours().toString().padStart(2, '0');
+      const minute = date.getMinutes().toString().padStart(2, '0');
+      
       const historyItem = {
         ...currentConversation,
         timestamp: currentConversation.startTime,
         duration: Date.now() - currentConversation.startTime,
-        summary: 'New Conversation', // Generate summary later?
+        summary: `新对话 ${year}/${month}/${day} ${hour}:${minute}`,
       };
       await storageService.saveHistory(historyItem);
       await get().loadHistory();
     }
-    set({
-        currentConversation: {
-            id: '',
-            startTime: 0,
-            messages: []
-        }
-    });
   },
   
   initializeGeminiClient: () => {

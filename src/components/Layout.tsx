@@ -18,7 +18,7 @@ export const Layout: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)', pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)' }}
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', bgcolor: 'background.default', pt: 'env(safe-area-inset-top)', pb: 'env(safe-area-inset-bottom)', pl: 'env(safe-area-inset-left)', pr: 'env(safe-area-inset-right)' }}
       onTouchStart={(e) => { touchStartX.current = e.changedTouches[0].clientX; }}
       onTouchEnd={(e) => {
         touchEndX.current = e.changedTouches[0].clientX;
@@ -45,7 +45,7 @@ export const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 'calc(80px + env(safe-area-inset-bottom))' }}>
+      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 'calc(64px + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </Container>
       
@@ -59,11 +59,11 @@ export const Layout: React.FC = () => {
             else if (newValue === 1) navigate('/history');
             else if (newValue === 2) navigate('/settings');
           }}
-          sx={{ bgcolor: 'background.default' }}
+          sx={{ bgcolor: 'background.default', height: 56 }}
         >
-          <BottomNavigationAction label="对话" icon={<Mic size={24} />} />
-          <BottomNavigationAction label="历史" icon={<History size={24} />} />
-          <BottomNavigationAction label="设置" icon={<Settings size={24} />} />
+          <BottomNavigationAction label="对话" icon={<Mic size={20} />} />
+          <BottomNavigationAction label="历史" icon={<History size={20} />} />
+          <BottomNavigationAction label="设置" icon={<Settings size={20} />} />
         </BottomNavigation>
       </Paper>
     </Box>
