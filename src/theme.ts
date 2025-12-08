@@ -80,14 +80,14 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
     MuiBottomNavigationAction: {
       styleOverrides: {
         root: {
-          minWidth: 88,
-          minHeight: 40, // 44 -> 40
-          paddingTop: 4, // 6 -> 4
-          paddingBottom: 4, // 6 -> 4
+          minWidth: 80, // 88 -> 80
+          minHeight: 44, // 40 -> 44 (保持与容器一致)
+          paddingTop: 2, // 4 -> 2
+          paddingBottom: 2, // 4 -> 2
           '& .MuiBottomNavigationAction-label': {
-            fontSize: '0.75rem',
+            fontSize: '0.7rem', // 0.75rem -> 0.7rem
             '&.Mui-selected': {
-              fontSize: '0.75rem',
+              fontSize: '0.7rem',
             }
           }
         }

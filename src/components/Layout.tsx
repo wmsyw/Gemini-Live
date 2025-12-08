@@ -25,7 +25,7 @@ export const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 'calc(56px + env(safe-area-inset-bottom))' }}>
+      <Container maxWidth="sm" sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, pb: 'calc(44px + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </Container>
       
@@ -39,11 +39,11 @@ export const Layout: React.FC = () => {
             else if (newValue === 1) navigate('/history');
             else if (newValue === 2) navigate('/settings');
           }}
-          sx={{ bgcolor: 'background.default', height: 48 }}
+          sx={{ bgcolor: 'background.default', height: 44 }}
         >
-          <BottomNavigationAction label="对话" icon={<Mic size={20} />} />
-          <BottomNavigationAction label="历史" icon={<History size={20} />} />
-          <BottomNavigationAction label="设置" icon={<Settings size={20} />} />
+          <BottomNavigationAction label="对话" icon={<Mic size={18} />} />
+          <BottomNavigationAction label="历史" icon={<History size={18} />} />
+          <BottomNavigationAction label="设置" icon={<Settings size={18} />} />
         </BottomNavigation>
       </Paper>
     </Box>
