@@ -81,9 +81,9 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
       styleOverrides: {
         root: {
           minWidth: 88,
-          minHeight: 44, // 保持按钮高度，但可以通过减小内边距来压缩整体
-          paddingTop: 6, // 8 -> 6
-          paddingBottom: 6, // 8 -> 6
+          minHeight: 40, // 44 -> 40
+          paddingTop: 4, // 6 -> 4
+          paddingBottom: 4, // 6 -> 4
           '& .MuiBottomNavigationAction-label': {
             fontSize: '0.75rem',
             '&.Mui-selected': {
