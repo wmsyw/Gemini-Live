@@ -23,11 +23,37 @@ const ReloadPrompt: React.FC = () => {
     },
   });
 
-  React.useEffect(() => {
-    if (needRefresh) {
-      updateServiceWorker(true);
+  const hardRefresh = React.useCallback(async () => {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg => reg.unregister()));
     }
-  }, [needRefresh, updateServiceWorker]);
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+    window.location.reload();
+  }, []);
+
+  React.useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const onControllerChange = () => {
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!needRefresh) return;
+    updateServiceWorker(true);
+    const fallback = window.setTimeout(() => {
+      void hardRefresh();
+    }, 2000);
+    return () => clearTimeout(fallback);
+  }, [needRefresh, updateServiceWorker, hardRefresh]);
 
   const close = () => {
     setOfflineReady(false);

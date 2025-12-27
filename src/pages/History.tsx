@@ -99,6 +99,7 @@ const History: React.FC = () => {
         }
         return;
       } else {
+        await audioService.unlock();
         await audioService.resumeContext();
         setPaused(false);
         const audios = item.messages.filter(m => m.data.audio).map(m => m.data.audio as ArrayBuffer);

@@ -81,29 +81,35 @@ export class AudioService {
   }
   
   playAudio(pcmData: ArrayBuffer): void {
-    if (!this.context) return;
-    
+    if (!this.context || !this.analyser) return;
+    if (this.context.state === 'closed') return;
+    if (this.context.state !== 'running') {
+      void this.context.resume();
+    }
+
     // Convert Int16 PCM to Float32
     const int16Array = new Int16Array(pcmData);
     const float32Array = new Float32Array(int16Array.length);
     for (let i = 0; i < int16Array.length; i++) {
       float32Array[i] = int16Array[i] / 32768;
     }
-    
+
     // Gemini output is always 24kHz
-    const buffer = this.context.createBuffer(1, float32Array.length, 24000);
-    buffer.copyToChannel(float32Array, 0);
-    
+    const contextRate = this.context.sampleRate;
+    const audioData = this.resampleAudio(float32Array, 24000, contextRate);
+    const buffer = this.context.createBuffer(1, audioData.length, contextRate);
+    buffer.copyToChannel(audioData, 0);
+
     const source = this.context.createBufferSource();
     source.buffer = buffer;
     // 输出音频同时接到分析器，以显示播放频谱
-    source.connect(this.analyser!);
+    source.connect(this.analyser);
     source.connect(this.context.destination);
     this.activeSources.push(source);
     source.onended = () => {
       this.activeSources = this.activeSources.filter(s => s !== source);
     };
-    
+
     const currentTime = this.context.currentTime;
     if (this.nextStartTime < currentTime) {
       this.nextStartTime = currentTime;
@@ -119,7 +125,22 @@ export class AudioService {
   getSampleRate(): number {
     return this.context?.sampleRate || 48000;
   }
-  
+
+  private resampleAudio(input: Float32Array, srcRate: number, dstRate: number): Float32Array {
+    if (srcRate === dstRate) return input;
+    const ratio = dstRate / srcRate;
+    const length = Math.max(1, Math.round(input.length * ratio));
+    const output = new Float32Array(length);
+    for (let i = 0; i < length; i++) {
+      const pos = i / ratio;
+      const idx = Math.floor(pos);
+      const next = Math.min(idx + 1, input.length - 1);
+      const frac = pos - idx;
+      output[i] = input[idx] + (input[next] - input[idx]) * frac;
+    }
+    return output;
+  }
+
   private floatTo16BitPCM(input: Float32Array): ArrayBuffer {
     const output = new Int16Array(input.length);
     for (let i = 0; i < input.length; i++) {
@@ -133,16 +154,26 @@ export class AudioService {
     this.initialize();
     if (!this.context) return;
 
+    if (this.context.state === 'closed') {
+      this.context = null;
+      this.analyser = null;
+      this.silentGain = null;
+      this.initialize();
+    }
+    if (!this.context) return;
+
     try {
       const buffer = this.context.createBuffer(1, 1, this.context.sampleRate);
       const source = this.context.createBufferSource();
       source.buffer = buffer;
       source.connect(this.context.destination);
       source.start(0);
+      source.stop(0);
 
-      if (this.context.state === 'suspended') {
+      if (this.context.state !== 'running') {
         await this.context.resume();
       }
+      this.nextStartTime = this.context.currentTime;
       console.log('AudioContext unlocked, state:', this.context.state);
     } catch (e) {
       console.error('AudioContext unlock failed:', e);

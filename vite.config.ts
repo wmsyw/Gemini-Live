@@ -25,6 +25,8 @@ export default defineConfig({
       includeAssets: ['icons/Gemini_Live.png', 'icons/Gemini_Live_Logo.svg'],
       workbox: {
         cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: [],
         runtimeCaching: [
           {
