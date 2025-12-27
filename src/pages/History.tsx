@@ -89,20 +89,42 @@ const History: React.FC = () => {
   };
 
   const handlePlay = async (item: typeof conversationHistory[number]) => {
-    // 同一条目：播放中点击则暂停；暂停中点击则继续
     if (playingId === item.id) {
       if (!paused) {
         await audioService.suspendContext();
         setPaused(true);
+        if (playTimerRef.current) {
+          clearTimeout(playTimerRef.current);
+          playTimerRef.current = null;
+        }
         return;
       } else {
         await audioService.resumeContext();
         setPaused(false);
+        const audios = item.messages.filter(m => m.data.audio).map(m => m.data.audio as ArrayBuffer);
+        const totalSec = audios.reduce((sum, buf) => sum + (new Int16Array(buf).length / 24000), 0);
+        const startCtx = audioService.getCurrentTime();
+        const resumeProgress = playProgress / 100;
+        const resumeTime = totalSec * resumeProgress;
+
+        const tick = () => {
+          const elapsed = audioService.getCurrentTime() - startCtx + resumeTime;
+          const ratio = Math.min(elapsed / totalSec, 1);
+          setPlayProgress(Math.round(ratio * 100));
+          if (ratio < 1) {
+            playTimerRef.current = window.setTimeout(tick, 100);
+          } else {
+            setPlayingId(null);
+            setPaused(false);
+            setPlayProgress(0);
+            playTimerRef.current = null;
+          }
+        };
+        tick();
         return;
       }
     }
 
-    // 切换到新条目前，停止旧播放并清理状态
     if (playingId) {
       audioService.stopPlayback();
       if (playTimerRef.current) {
@@ -117,30 +139,43 @@ const History: React.FC = () => {
     try {
       await audioService.initialize();
       await audioService.resumeContext();
+
       const audios = item.messages.filter(m => m.data.audio).map(m => m.data.audio as ArrayBuffer);
+
       if (audios.length === 0) {
         const texts = item.messages.filter(m => m.data.text).map(m => m.data.text as string);
         if (texts.length === 0) return;
         const utterance = new SpeechSynthesisUtterance(texts.join('\n'));
         utterance.lang = settings.language === 'zh-CN' ? 'zh-CN' : 'en-US';
+        utterance.onend = () => {
+          setPlayingId(null);
+          setPlayProgress(0);
+        };
         window.speechSynthesis.speak(utterance);
+        setPlayingId(item.id);
+        setPlayProgress(0);
         return;
       }
+
       setPlayingId(item.id);
       setPaused(false);
       setPlayProgress(0);
+
       const totalSec = audios.reduce((sum, buf) => sum + (new Int16Array(buf).length / 24000), 0);
       const startCtx = audioService.getCurrentTime();
+
       audios.forEach(buf => audioService.playAudio(buf));
+
       const tick = () => {
         const elapsed = audioService.getCurrentTime() - startCtx;
         const ratio = Math.min(elapsed / totalSec, 1);
         setPlayProgress(Math.round(ratio * 100));
-        if (ratio < 1) {
-          playTimerRef.current = window.setTimeout(tick, 100);
-        } else {
+        if (ratio < 1 && !paused) {
+          playTimerRef.current = window.setTimeout(tick, 50);
+        } else if (ratio >= 1) {
           setPlayingId(null);
           setPaused(false);
+          setPlayProgress(0);
           playTimerRef.current = null;
         }
       };
