@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { getTheme } from './theme';
 import { Layout } from './components/Layout';
+import ReloadPrompt from './components/ReloadPrompt';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import History from './pages/History';
@@ -116,6 +117,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <ReloadPrompt />
       <RouterProvider router={router} future={{ v7_startTransition: true }} />
       <Snackbar
         open={installOpen}

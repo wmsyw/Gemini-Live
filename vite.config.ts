@@ -8,6 +8,9 @@ export default defineConfig({
   build: {
     sourcemap: 'hidden',
   },
+  define: {
+    __APP_VERSION__: JSON.stringify(`v0.1.0-${new Date().getTime()}`),
+  },
   plugins: [
     react({
       babel: {
@@ -18,9 +21,10 @@ export default defineConfig({
     }),
     tsconfigPaths(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'promptForUpdate',
       includeAssets: ['icons/Gemini_Live.png', 'icons/Gemini_Live_Logo.svg'],
       workbox: {
+        updateViaCache: 'none',
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
@@ -28,14 +32,25 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/generativelanguage\.googleapis\.com\//,
+            urlPattern: ({ request }) => request.mode === 'navigate',
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'gemini-api-cache',
+              cacheName: 'html-cache',
+              networkTimeoutSeconds: 3,
+              cacheableResponse: {
+                statuses: [200]
+              },
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 3
               }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/generativelanguage\.googleapis\.com\//,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'gemini-api-cache'
             }
           }
         ]

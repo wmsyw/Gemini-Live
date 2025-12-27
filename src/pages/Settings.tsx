@@ -444,6 +444,11 @@ const Settings: React.FC = () => {
         </Box>
       </Paper>
         </Box>
+        <Box sx={{ mt: 4, mb: 2, textAlign: 'center', opacity: 0.5 }}>
+          <Typography variant="caption" color="text.secondary">
+            Version: {__APP_VERSION__}
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );
