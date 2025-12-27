@@ -24,7 +24,6 @@ export default defineConfig({
       registerType: 'promptForUpdate',
       includeAssets: ['icons/Gemini_Live.png', 'icons/Gemini_Live_Logo.svg'],
       workbox: {
-        updateViaCache: 'none',
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
