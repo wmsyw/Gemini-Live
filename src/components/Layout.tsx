@@ -33,15 +33,12 @@ export const Layout: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           p: 2,
-          pb: 'calc(44px + env(safe-area-inset-bottom))',
-          '@media (display-mode: standalone)': {
-            pb: 'calc(36px + env(safe-area-inset-bottom))',
-          },
+          pb: 'calc(36px + env(safe-area-inset-bottom))',
         }}
       >
         <Outlet />
       </Container>
-      
+
       <Paper square sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, pb: 'env(safe-area-inset-bottom)', borderRadius: 0, bgcolor: 'background.default' }} elevation={0}>
         <BottomNavigation
           showLabels
@@ -54,10 +51,7 @@ export const Layout: React.FC = () => {
           }}
           sx={{
             bgcolor: 'background.default',
-            height: 44,
-            '@media (display-mode: standalone)': {
-              height: 36,
-            },
+            height: 36,
           }}
         >
           <BottomNavigationAction label="对话" icon={<Mic size={18} />} />

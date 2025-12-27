@@ -148,55 +148,23 @@ const Home: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
-      
-      {/* 顶部模糊遮罩 */}
-      <Box 
-        sx={{ 
-          position: 'absolute', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          height: 32, 
-          background: (theme) => `linear-gradient(to bottom, ${theme.palette.background.default} 0%, transparent 100%)`,
-          zIndex: 5,
-          pointerEvents: 'none'
-        }} 
-      />
 
-      <Box sx={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        mb: 2, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: 2, 
-        px: 1, 
-        pt: 2,
-        scrollbarWidth: 'none',
-        '&::-webkit-scrollbar': { display: 'none' }
-      }}>
-        {currentConversation.messages.length === 0 && !isConnected && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.6 }}>
-                <Mic size={48} />
-                <Typography variant="h6" mt={2}>{t('home.welcome')}</Typography>
-            </Box>
-        )}
-        
-        {currentConversation.messages.map((msg, idx) => (
-            <ChatMessage key={idx} message={msg} />
-        ))}
-        <div ref={messagesEndRef} />
-      </Box>
+      {!isConnected && currentConversation.messages.length === 0 && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, opacity: 0.6 }}>
+          <Mic size={48} />
+          <Typography variant="h6" mt={2}>{t('home.welcome')}</Typography>
+        </Box>
+      )}
 
-      <Box sx={{ flexShrink: 0 }}>
+      <Box sx={{ flexShrink: 0, mt: 'auto' }}>
         <AudioVisualizer isActive={isConnected} />
 
         <Box sx={{ display: 'flex', justifyContent: 'center', pb: 2, alignItems: 'center', flexDirection: 'column' }}>
-            <IconButton 
+            <IconButton
                 onClick={handleToggleRecording}
-                sx={{ 
-                    width: 72, 
-                    height: 72, 
+                sx={{
+                    width: 72,
+                    height: 72,
                     bgcolor: isConnected ? 'error.main' : 'primary.main',
                     color: 'white',
                     '&:hover': {
@@ -209,7 +177,7 @@ const Home: React.FC = () => {
             >
                 {isConnected ? <StopCircle size={36} /> : <Mic size={36} />}
             </IconButton>
-            
+
             <Box sx={{ height: 24, mt: 1 }}>
             {isConnected && (
                 <Typography variant="caption" color="primary" sx={{ fontWeight: 'medium' }}>

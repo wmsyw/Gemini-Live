@@ -14,13 +14,15 @@ export const AudioVisualizer: React.FC<Props> = ({ isActive }) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
-    // Set canvas size to match display size
+
     const resizeCanvas = () => {
         const parent = canvas.parentElement;
         if (parent) {
-            canvas.width = parent.clientWidth;
-            canvas.height = parent.clientHeight;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = parent.clientWidth * dpr;
+            canvas.height = parent.clientHeight * dpr;
+            canvas.style.width = parent.clientWidth + 'px';
+            canvas.style.height = parent.clientHeight + 'px';
         }
     };
     resizeCanvas();
@@ -29,53 +31,56 @@ export const AudioVisualizer: React.FC<Props> = ({ isActive }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // If not active, do nothing (don't draw flat line)
     if (!isActive) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         return () => window.removeEventListener('resize', resizeCanvas);
     }
 
     const analyser = audioService.getAnalyser();
-    
-    // Fallback animation if analyser is not ready but active (e.g. waiting for mic)
+
     if (!analyser) {
-         // ... simple pulse animation?
          return () => window.removeEventListener('resize', resizeCanvas);
     }
 
-    const bufferLength = analyser.fftSize;
+    const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
+    const barCount = 64;
+    const barSpacing = 0.2;
 
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
 
-      analyser.getByteTimeDomainData(dataArray);
+      analyser.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = theme.palette.background.default;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = theme.palette.primary.main;
-      ctx.beginPath();
+      const barWidth = (canvas.width / barCount) * (1 - barSpacing);
+      const gap = (canvas.width / barCount) * barSpacing;
 
-      const sliceWidth = canvas.width * 1.0 / bufferLength;
-      let x = 0;
+      for (let i = 0; i < barCount; i++) {
+        const dataIndex = Math.floor(i * bufferLength / barCount);
+        const amplitude = dataArray[dataIndex] / 255;
 
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = v * canvas.height / 2;
+        const barHeight = amplitude * canvas.height * 0.8;
+        const x = i * (barWidth + gap);
+        const y = canvas.height / 2 - barHeight / 2;
 
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
+        const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
+        gradient.addColorStop(0, theme.palette.primary.main);
+        gradient.addColorStop(0.5, theme.palette.primary.light);
+        gradient.addColorStop(1, theme.palette.primary.main);
 
-        x += sliceWidth;
+        ctx.fillStyle = gradient;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = theme.palette.primary.main;
+
+        const radius = barWidth / 2;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barHeight || 2, radius);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
       }
-
-      ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.stroke();
     };
 
     draw();
@@ -87,7 +92,7 @@ export const AudioVisualizer: React.FC<Props> = ({ isActive }) => {
   }, [isActive, theme]);
 
   return (
-    <Box sx={{ width: '100%', height: 120, display: 'flex', justifyContent: 'center', alignItems: 'center', my: 2 }}>
+    <Box sx={{ width: '100%', height: 160, display: 'flex', justifyContent: 'center', alignItems: 'center', my: 3 }}>
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
     </Box>
   );
