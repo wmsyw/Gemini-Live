@@ -45,7 +45,7 @@ const Home: React.FC = () => {
       await handleStop();
     } else {
       try {
-        audioService.resumeContext();
+        await audioService.unlock();
 
         // Ensure client is initialized
         if (!geminiClient) {

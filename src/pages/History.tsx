@@ -137,7 +137,7 @@ const History: React.FC = () => {
     }
 
     try {
-      await audioService.unlockAudioForIOS();
+      await audioService.unlock();
 
       const audios = item.messages.filter(m => m.data.audio).map(m => m.data.audio as ArrayBuffer);
 

@@ -21,36 +21,15 @@ export default defineConfig({
     }),
     tsconfigPaths(),
     VitePWA({
-      registerType: 'promptForUpdate',
+      registerType: 'autoUpdate',
       includeAssets: ['icons/Gemini_Live.png', 'icons/Gemini_Live_Logo.svg'],
       workbox: {
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        navigateFallback: '/index.html',
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: [],
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'html-cache',
-              networkTimeoutSeconds: 3,
-              cacheableResponse: {
-                statuses: [200]
-              },
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 3
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/generativelanguage\.googleapis\.com\//,
-            handler: 'NetworkOnly',
-            options: {
-              cacheName: 'gemini-api-cache'
-            }
+            urlPattern: ({ url }) => true,
+            handler: 'NetworkOnly'
           }
         ]
       },

@@ -23,6 +23,12 @@ const ReloadPrompt: React.FC = () => {
     },
   });
 
+  React.useEffect(() => {
+    if (needRefresh) {
+      updateServiceWorker(true);
+    }
+  }, [needRefresh, updateServiceWorker]);
+
   const close = () => {
     setOfflineReady(false);
     setNeedRefresh(false);
@@ -41,19 +47,9 @@ const ReloadPrompt: React.FC = () => {
       <Snackbar
         open={needRefresh}
         onClose={() => {}}
-        message="发现新版本,请刷新以体验最新功能"
+        message="正在更新到最新版本..."
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ mb: 'calc(64px + env(safe-area-inset-bottom, 0px))', zIndex: 2000 }}
-        action={
-          <React.Fragment>
-            <Button color="primary" size="small" onClick={() => updateServiceWorker(true)}>
-              立即刷新
-            </Button>
-            <IconButton size="small" aria-label="close" color="inherit" onClick={close}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </React.Fragment>
-        }
       />
     </>
   );
