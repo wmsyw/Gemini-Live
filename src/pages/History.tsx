@@ -91,7 +91,7 @@ const History: React.FC = () => {
   const handlePlay = async (item: typeof conversationHistory[number]) => {
     if (playingId === item.id) {
       if (!paused) {
-        await audioService.suspendContext();
+        audioService.suspendContext();
         setPaused(true);
         if (playTimerRef.current) {
           clearTimeout(playTimerRef.current);
@@ -99,7 +99,7 @@ const History: React.FC = () => {
         }
         return;
       } else {
-        await audioService.resumeContext();
+        audioService.resumeContext();
         setPaused(false);
         const audios = item.messages.filter(m => m.data.audio).map(m => m.data.audio as ArrayBuffer);
         const totalSec = audios.reduce((sum, buf) => sum + (new Int16Array(buf).length / 24000), 0);
@@ -137,8 +137,8 @@ const History: React.FC = () => {
     }
 
     try {
-      await audioService.initialize();
-      await audioService.resumeContext();
+      audioService.initialize();
+      audioService.resumeContext();
 
       const audios = item.messages.filter(m => m.data.audio).map(m => m.data.audio as ArrayBuffer);
 

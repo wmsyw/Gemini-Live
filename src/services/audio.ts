@@ -9,10 +9,10 @@ export class AudioService {
   
   private nextStartTime: number = 0;
   private activeSources: AudioBufferSourceNode[] = [];
-  
-  async initialize(): Promise<void> {
+
+  initialize(): void {
     if (this.context) return;
-    
+
     this.context = new AudioContext({ latencyHint: 'interactive' });
     this.analyser = this.context.createAnalyser();
     this.analyser.fftSize = 512;
@@ -23,7 +23,7 @@ export class AudioService {
   }
   
   async startRecording(onAudioData: (data: ArrayBuffer) => void): Promise<void> {
-    await this.initialize();
+    this.initialize();
     if (!this.context) return;
     
     this.onAudioData = onAudioData;
@@ -128,10 +128,10 @@ export class AudioService {
     }
     return output.buffer;
   }
-  
-  async resumeContext(): Promise<void> {
+
+  resumeContext(): void {
     if (this.context?.state === 'suspended') {
-      await this.context.resume();
+      this.context.resume().catch(e => console.error('Resume context error:', e));
     }
   }
 
@@ -145,9 +145,9 @@ export class AudioService {
     this.nextStartTime = this.context.currentTime;
   }
 
-  async suspendContext(): Promise<void> {
+  suspendContext(): void {
     if (this.context?.state === 'running') {
-      await this.context.suspend();
+      this.context.suspend().catch(e => console.error('Suspend context error:', e));
     }
   }
 

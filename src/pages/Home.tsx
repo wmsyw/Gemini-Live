@@ -45,13 +45,13 @@ const Home: React.FC = () => {
       await handleStop();
     } else {
       try {
-        await audioService.resumeContext();
-        
+        audioService.resumeContext();
+
         // Ensure client is initialized
         if (!geminiClient) {
             initializeGeminiClient();
         }
-        
+
         // Get the client from store (state updates might be batched, but direct access via getState is safe for logic)
         const client = useStore.getState().geminiClient;
         if (!client) return;
