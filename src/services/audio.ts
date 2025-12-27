@@ -133,16 +133,20 @@ export class AudioService {
     this.initialize();
     if (!this.context) return;
 
-    const buffer = this.context.createBuffer(1, 1, 22050);
-    const source = this.context.createBufferSource();
-    source.buffer = buffer;
-    source.connect(this.context.destination);
-    source.start(0);
+    try {
+      const buffer = this.context.createBuffer(1, 1, this.context.sampleRate);
+      const source = this.context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.context.destination);
+      source.start(0);
 
-    if (this.context.state === 'suspended') {
-      await this.context.resume();
+      if (this.context.state === 'suspended') {
+        await this.context.resume();
+      }
+      console.log('AudioContext unlocked, state:', this.context.state);
+    } catch (e) {
+      console.error('AudioContext unlock failed:', e);
     }
-    console.log('AudioContext unlocked, state:', this.context.state);
   }
 
   async unlockAudioForIOS(): Promise<void> {
@@ -189,9 +193,13 @@ export class AudioService {
     this.nextStartTime = this.context.currentTime;
   }
 
-  suspendContext(): void {
+  async suspendContext(): Promise<void> {
     if (this.context?.state === 'running') {
-      this.context.suspend().catch(e => console.error('Suspend context error:', e));
+      try {
+        await this.context.suspend();
+      } catch (e) {
+        console.error('Suspend context error:', e);
+      }
     }
   }
 
