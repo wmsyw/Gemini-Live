@@ -12,6 +12,15 @@ import './i18n';
 
 function App() {
   const { currentTheme, loadSettings, loadHistory } = useStore();
+  const isIOS = React.useMemo(() => {
+    const ua = navigator.userAgent;
+    return /iphone|ipad|ipod/i.test(ua) ||
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }, []);
+  const [isStandalone, setIsStandalone] = React.useState(() => {
+    const mq = window.matchMedia('(display-mode: standalone)');
+    return mq.matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  });
   const [systemMode, setSystemMode] = React.useState<'light' | 'dark'>(
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
@@ -40,6 +49,20 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(display-mode: standalone)');
+    const handler = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', handler);
+    } else if (typeof mq.addListener === 'function') {
+      mq.addListener(handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
+    }
+    return () => {
+      if (typeof mq.removeEventListener === 'function') mq.removeEventListener('change', handler);
+      else if (typeof mq.removeListener === 'function') mq.removeListener(handler as (this: MediaQueryList, ev: MediaQueryListEvent) => void);
+    };
+  }, []);
+
   const theme = React.useMemo(() => {
     const mode = currentTheme === 'auto' ? systemMode : currentTheme;
     return getTheme(mode);
@@ -49,6 +72,7 @@ function App() {
   const [installOpen, setInstallOpen] = React.useState(false);
 
   useEffect(() => {
+    if (isIOS) return;
     const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setInstallEvent(e);
@@ -56,7 +80,11 @@ function App() {
     };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  }, [isIOS]);
+
+  useEffect(() => {
+    if (isIOS && !isStandalone) setInstallOpen(true);
+  }, [isIOS, isStandalone]);
 
   const handleInstall = async () => {
     if (!installEvent) return;
@@ -68,6 +96,10 @@ function App() {
     setInstallOpen(false);
     setInstallEvent(null);
   };
+
+  const installMessage = isIOS
+    ? '在Safari中点击分享并添加到主屏幕'
+    : '添加到主屏幕以获得更好体验';
 
   const router = React.useMemo(() => createBrowserRouter([
     {
@@ -88,14 +120,14 @@ function App() {
       <Snackbar
         open={installOpen}
         onClose={() => setInstallOpen(false)}
-        message={systemMode === 'dark' ? '添加到主屏幕以获得更好体验' : '添加到主屏幕以获得更好体验'}
+        message={installMessage}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         action={
-          <Button color="primary" size="small" onClick={handleInstall}>
+          installEvent ? <Button color="primary" size="small" onClick={handleInstall}>
             安装
-          </Button>
+          </Button> : undefined
         }
-        sx={{ mb: 'calc(64px + env(safe-area-inset-bottom))' }}
+        sx={{ mb: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}
       />
     </ThemeProvider>
   );

@@ -49,12 +49,27 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
       styleOverrides: {
         html: { height: '100%' },
         body: {
+          height: '100vh',
           minHeight: '100dvh',
+          overflow: 'hidden',
+          width: '100%',
           WebkitFontSmoothing: 'antialiased',
           MozOsxFontSmoothing: 'grayscale',
+          WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
           backgroundColor: mode === 'light' ? '#FFFFFF' : '#1C1C1E',
         },
-        '#root': { minHeight: '100dvh' },
+        '#root': {
+          height: '100vh',
+          minHeight: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box',
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+        },
       }
     },
     MuiButton: {
