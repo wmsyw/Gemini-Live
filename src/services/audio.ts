@@ -129,6 +129,29 @@ export class AudioService {
     return output.buffer;
   }
 
+  async unlockAudioForIOS(): Promise<void> {
+    if (!this.context) {
+      this.context = new AudioContext({ latencyHint: 'interactive' });
+      this.analyser = this.context.createAnalyser();
+      this.analyser.fftSize = 512;
+      this.analyser.smoothingTimeConstant = 0.5;
+      this.silentGain = this.context.createGain();
+      this.silentGain.gain.value = 0;
+      this.silentGain.connect(this.context.destination);
+    }
+
+    const buffer = this.context.createBuffer(1, 1, this.context.sampleRate);
+    const src = this.context.createBufferSource();
+    src.buffer = buffer;
+    src.connect(this.context.destination);
+    src.start(0);
+    src.stop(0);
+
+    if (this.context.state === 'suspended') {
+      await this.context.resume();
+    }
+  }
+
   resumeContext(): void {
     if (this.context?.state === 'suspended') {
       this.context.resume().catch(e => console.error('Resume context error:', e));
